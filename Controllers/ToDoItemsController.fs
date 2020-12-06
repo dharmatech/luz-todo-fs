@@ -48,15 +48,26 @@ type ToDoItemsController private () =
         else
             ActionResult<IActionResult>(base.BadRequest(base.ModelState))
 
+    // [<HttpGet("{id}")>]
+    // member this.Get(id:int) =
+    //     if base.ModelState.IsValid then
+    //         if not (this._Context.ToDoItemExist(id)) then
+    //             ActionResult<IActionResult>(base.NotFound("NOT FOUND!, There is no ToDoItem with this code: " + id.ToString()))
+    //         else
+    //             ActionResult<IActionResult>(base.Ok(this._Context.GetToDoItem(id)))
+    //     else
+    //         ActionResult<IActionResult>(base.BadRequest(base.ModelState))
+
     [<HttpGet("{id}")>]
     member this.Get(id:int) =
         if base.ModelState.IsValid then
             if not (this._Context.ToDoItemExist(id)) then
-                ActionResult<IActionResult>(base.NotFound("NOT FOUND!, There is no ToDoItem with this code: " + id.ToString()))
+                this.NotFound("NOT FOUND!, There is no ToDoItem with this code: " + id.ToString()) :> IActionResult
             else
-                ActionResult<IActionResult>(base.Ok(this._Context.GetToDoItem(id)))
+                this.Ok(this._Context.GetToDoItem(id)) :> IActionResult
+
         else
-            ActionResult<IActionResult>(base.BadRequest(base.ModelState))
+            this.BadRequest(base.ModelState) :> IActionResult
 
     [<HttpPost>]
     member this.Post([<FromBody>] _ToDoItem : ToDoItem) =
