@@ -5,9 +5,7 @@ open Microsoft.AspNetCore.Mvc
 open FSToDoList.DataContext
 open FSToDoList.Models
 open Microsoft.EntityFrameworkCore
-open Microsoft.AspNetCore.Http
 open System.Linq
-open System.Threading.Tasks
 
 [<ApiController>]
 [<Route("api/ToDoItems")>]
@@ -42,21 +40,11 @@ type ToDoItemsController private () =
                     items.Add(this._Context.ToDoItems.Find(value.Id))
 
             if (items.Count = 0) then
-                ActionResult<IActionResult>(base.NotFound("NOT FOUND!, The search returned 0 values"))
+                base.NotFound("NOT FOUND!, The search returned 0 values") :> IActionResult
             else
-                ActionResult<IActionResult>(base.Ok(items))
+                base.Ok(items) :>IActionResult
         else
-            ActionResult<IActionResult>(base.BadRequest(base.ModelState))
-
-    // [<HttpGet("{id}")>]
-    // member this.Get(id:int) =
-    //     if base.ModelState.IsValid then
-    //         if not (this._Context.ToDoItemExist(id)) then
-    //             ActionResult<IActionResult>(base.NotFound("NOT FOUND!, There is no ToDoItem with this code: " + id.ToString()))
-    //         else
-    //             ActionResult<IActionResult>(base.Ok(this._Context.GetToDoItem(id)))
-    //     else
-    //         ActionResult<IActionResult>(base.BadRequest(base.ModelState))
+            base.BadRequest(base.ModelState) :> IActionResult
 
     [<HttpGet("{id}")>]
     member this.Get(id:int) =
@@ -72,48 +60,47 @@ type ToDoItemsController private () =
     [<HttpPost>]
     member this.Post([<FromBody>] _ToDoItem : ToDoItem) =
         if (base.ModelState.IsValid) then 
-            if not( isNull _ToDoItem.Name ) then
-                if ( _ToDoItem.Id <> 0 ) then //check if the ID is set
-                    ActionResult<IActionResult>(base.BadRequest("BAD REQUEST, the ToDoItemID is autoincremented")) // the ToDoItem is autoincremented
+            if not (isNull _ToDoItem.Name) then
+                if _ToDoItem.Id <> 0 then //check if the ID is set
+                    base.BadRequest("BAD REQUEST, the ToDoItemID is autoincremented") :> IActionResult
                 else 
                         this._Context.ToDoItems.Add(_ToDoItem) |> ignore
                         this._Context.SaveChanges() |> ignore
-                        ActionResult<IActionResult>(base.Ok(this._Context.ToDoItems.Last()))
+                        base.Ok(this._Context.ToDoItems.Last()) :> IActionResult
             else
-                ActionResult<IActionResult>(base.BadRequest("BAD REQUEST!, the field Initials can not be null"))                    
+                base.BadRequest("BAD REQUEST!, the field Initials can not be null") :> IActionResult
         else
-            ActionResult<IActionResult>(base.BadRequest(base.ModelState))
+            base.BadRequest(base.ModelState) :> IActionResult
 
     [<HttpPut("{id}")>]
      member this.Put( id:int, [<FromBody>] _ToDoItem : ToDoItem) =
         if (base.ModelState.IsValid) then 
             if not( isNull _ToDoItem.Name ) then
                 if (_ToDoItem.Id <> id) then 
-                    ActionResult<IActionResult>(base.BadRequest())
+                    base.BadRequest("id in body does not match id in URL") :> IActionResult
                 else
-                        try//error handler
+                        try
                             this._Context.Entry(_ToDoItem).State = EntityState.Modified |> ignore
                             this._Context.SaveChanges() |> ignore
-                            ActionResult<IActionResult>(base.Ok(_ToDoItem))
+                            base.Ok(_ToDoItem) :> IActionResult
                         with ex ->
-                            if not( this._Context.ToDoItemExist(id) ) then
-                                ActionResult<IActionResult>(base.NotFound())
+                            if not (this._Context.ToDoItemExist(id)) then
+                                base.NotFound() :> IActionResult
                             else 
-                                ActionResult<IActionResult>(base.BadRequest())
+                                base.BadRequest() :> IActionResult
             else
-                ActionResult<IActionResult>(base.BadRequest())                                
+                base.BadRequest() :> IActionResult
         else    
-            ActionResult<IActionResult>(base.BadRequest(base.ModelState))
+            base.BadRequest(base.ModelState) :> IActionResult
 
     [<HttpDelete("{id}")>]
     member this.Delete(id:int) =
         if (base.ModelState.IsValid) then 
-            if not( this._Context.ToDoItemExist(id) ) then 
-                ActionResult<IActionResult>(base.NotFound())
-            else (
-                    this._Context.ToDoItems.Remove(this._Context.GetToDoItem(id)) |> ignore
-                    this._Context.SaveChanges() |> ignore
-                    ActionResult<IActionResult>(base.Ok(this._Context.ToDoItems.Last()))
-            )
+            if not (this._Context.ToDoItemExist(id)) then 
+                base.NotFound() :> IActionResult
+            else 
+                this._Context.ToDoItems.Remove(this._Context.GetToDoItem(id)) |> ignore
+                this._Context.SaveChanges() |> ignore
+                base.Ok(this._Context.ToDoItems.Last()) :> IActionResult
         else
-            ActionResult<IActionResult>(base.BadRequest(base.ModelState))
+            base.BadRequest(base.ModelState) :> IActionResult
